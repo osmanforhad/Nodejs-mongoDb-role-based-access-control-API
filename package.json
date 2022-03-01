@@ -1,0 +1,11 @@
+{
+  "name": "rbac",
+  "version": "1.0.0",
+  "description": "node js mongodb role based access control system",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "osman forhad",
+  "license": "MIT"
+}
