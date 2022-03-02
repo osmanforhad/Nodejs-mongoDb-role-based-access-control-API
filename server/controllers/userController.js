@@ -1,3 +1,4 @@
+const roles = require("../roles");
 const User = require("../models/userModel");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
@@ -110,5 +111,37 @@ exports.deleteUser = async(request, response, next) => {
     })
   } catch (error) {
     next(error)
+  }
+}
+
+//__Method for AccessControl__//
+exports.grantAccess = function(action, resource) {
+  return async (request, response, next) => {
+    try {
+      const permission = roles.can(request.user.role)[action](response);
+      if(!permission.granted) {
+        return response.status(401).json({
+          error: "You dont have enough permission to perform this action"
+        });
+      }
+      next();
+    } catch (error) {
+      next(error)
+    }
+  }
+}
+
+//__Method for Check User Logged in Functionality__//
+exports.allowIfLoggedin = async (request, response, next) => {
+  try {
+    const user = response.locals.loggedInUser;
+    if(!user)
+    return response.status(401).json({
+      error: "You need to be logged in to access this route"
+    });
+    request.user = user;
+    next();
+  } catch (error) {
+    next(error);
   }
 }
