@@ -13,11 +13,11 @@ async function validatePassword(plainPassword, hashedPassword) {
 }
 
 exports.grantAccess = function (action, resource) {
-  return async (req, res, next) => {
+  return async (request, response, next) => {
     try {
-      const permission = roles.can(req.user.role)[action](resource);
+      const permission = roles.can(request.user.role)[action](resource);
       if (!permission.granted) {
-        return res.status(401).json({
+        return response.status(401).json({
           error: "You don't have enough permission to perform this action",
         });
       }
@@ -28,23 +28,23 @@ exports.grantAccess = function (action, resource) {
   };
 };
 
-exports.allowIfLoggedin = async (req, res, next) => {
+exports.allowIfLoggedin = async (request, response, next) => {
   try {
-    const user = res.locals.loggedInUser;
+    const user = response.locals.loggedInUser;
     if (!user)
-      return res.status(401).json({
+      return response.status(401).json({
         error: "You need to be logged in to access this route",
       });
-    req.user = user;
+    request.user = user;
     next();
   } catch (error) {
     next(error);
   }
 };
 
-exports.signup = async (req, res, next) => {
+exports.signup = async (request, response, next) => {
   try {
-    const { role, email, password } = req.body;
+    const { role, email, password } = request.body;
     const hashedPassword = await hashPassword(password);
     const newUser = new User({
       email,
@@ -60,7 +60,7 @@ exports.signup = async (req, res, next) => {
     );
     newUser.accessToken = accessToken;
     await newUser.save();
-    res.json({
+    response.json({
       data: newUser,
       message: "You have signed up successfully",
     });
@@ -69,9 +69,9 @@ exports.signup = async (req, res, next) => {
   }
 };
 
-exports.login = async (req, res, next) => {
+exports.login = async (request, response, next) => {
   try {
-    const { email, password } = req.body;
+    const { email, password } = request.body;
     const user = await User.findOne({ email });
     if (!user) return next(new Error("Email does not exist"));
     const validPassword = await validatePassword(password, user.password);
@@ -80,7 +80,7 @@ exports.login = async (req, res, next) => {
       expiresIn: "1d",
     });
     await User.findByIdAndUpdate(user._id, { accessToken });
-    res.status(200).json({
+    response.status(200).json({
       data: { email: user.email, role: user.role },
       accessToken,
     });
@@ -89,19 +89,19 @@ exports.login = async (req, res, next) => {
   }
 };
 
-exports.getUsers = async (req, res, next) => {
+exports.getUsers = async (request, response, next) => {
   const users = await User.find({});
-  res.status(200).json({
+  response.status(200).json({
     data: users,
   });
 };
 
-exports.getUser = async (req, res, next) => {
+exports.getUser = async (request, response, next) => {
   try {
-    const userId = req.params.userId;
+    const userId = request.params.userId;
     const user = await User.findById(userId);
     if (!user) return next(new Error("User does not exist"));
-    res.status(200).json({
+    response.status(200).json({
       data: user,
     });
   } catch (error) {
@@ -109,13 +109,13 @@ exports.getUser = async (req, res, next) => {
   }
 };
 
-exports.updateUser = async (req, res, next) => {
+exports.updateUser = async (request, response, next) => {
   try {
-    const { role } = req.body;
-    const userId = req.params.userId;
+    const { role } = request.body;
+    const userId = request.params.userId;
     await User.findByIdAndUpdate(userId, { role });
     const user = await User.findById(userId);
-    res.status(200).json({
+    response.status(200).json({
       data: user,
     });
   } catch (error) {
@@ -123,11 +123,11 @@ exports.updateUser = async (req, res, next) => {
   }
 };
 
-exports.deleteUser = async (req, res, next) => {
+exports.deleteUser = async (request, response, next) => {
   try {
-    const userId = req.params.userId;
+    const userId = request.params.userId;
     await User.findByIdAndDelete(userId);
-    res.status(200).json({
+    response.status(200).json({
       data: null,
       message: "User has been deleted",
     });
