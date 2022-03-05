@@ -1,38 +1,16 @@
 const AccessControl = require("accesscontrol");
 const ac = new AccessControl();
 
-exports.roles = function () {
-  /**
-   * Define Access Control for
-   * BASIC
-   *
-   * Role
-   */
-  ac.grant("basic");
-  _readOwn("profile");
-  _updateOwn("profile");
+exports.roles = (function () {
+  ac.grant("basic").readOwn("profile").updateOwn("profile");
 
-  /**
-   * Define Access Control for
-   * SuperVisor
-   *
-   * Role
-   */
-  ac.grant("supervisor");
-  _extend("basic");
-  _readAny("profile");
+  ac.grant("supervisor").extend("basic").readAny("profile");
 
-  /**
-   * Define Access Control for
-   * Admin
-   *
-   * Role
-   */
-  ac.grant("admin");
-  _extend("basic");
-  _extend("supervisor");
-  _updateAny("profile");
-  _deleteAny("profile");
+  ac.grant("admin")
+    .extend("basic")
+    .extend("supervisor")
+    .updateAny("profile")
+    .deleteAny("profile");
 
   return ac;
-};
+})();
